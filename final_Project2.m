@@ -2,16 +2,16 @@
 
 % list of known computers: point to git repo directory on your device
 if exist('C:\Users\kedea\Documents\CSHL_GroupProject2','dir')
-    code_dir = 'C:\Users\kedea\Documents\CSHL_GroupProject2';
-elseif exist('C:\Admin\makingThisUpForExample\CSHL_GroupProject2','dir')
-    code_dir = NaN;
+    home_dir = 'C:\Users\kedea\Documents\CSHL_GroupProject2';
+elseif exist('C:\Users\course\Documents\CSHL_GroupProject2','dir')
+    home_dir = 'C:\Users\course\Documents\CSHL_GroupProject2';
 else
     error('Add your directory to this list (or rewrite this if there is a better way) - Kat')
 % code_dir = fullfile("C:", "Neuda2023", "Code", "w1d1", "npy-matlab-master");
 end
 
-addpath(genpath(code_dir))
-cd(code_dir)
+addpath(genpath(home_dir))
+cd(home_dir)
 
 % check that the data is one this computer in the same exact location (in
 % this file to be safe - git will ignore data (.gitignore) so it needs to
@@ -21,8 +21,10 @@ if ~exist('allData','dir')
 end
 
 %% Load data
+whichMouse = 'Hench_2017-06-18';
+
 % genpath now sees all of the data inside allData
-sesPath = "Moniz_2017-05-15";
+sesPath = [home_dir '\allData\' whichMouse];
 
 % load all variables for session into a struct
 S = loadSession(sesPath); % this calls a custom-coded read function for this dataset; it reads all .npy and .tsv files in the directory

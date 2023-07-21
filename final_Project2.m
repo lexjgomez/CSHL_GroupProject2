@@ -1,10 +1,27 @@
-%% Load Helper Functions functions
-code_dir = fullfile("C:", "Neuda2023", "Code", "w1d1", "npy-matlab-master");
+%% Directory path across computers
+
+% list of known computers: point to git repo directory on your device
+if exist('C:\Users\kedea\Documents\CSHL_GroupProject2','dir')
+    code_dir = 'C:\Users\kedea\Documents\CSHL_GroupProject2';
+elseif exist('C:\Admin\makingThisUpForExample\CSHL_GroupProject2','dir')
+    code_dir = NaN;
+else
+    error('Add your directory to this list (or rewrite this if there is a better way) - Kat')
+% code_dir = fullfile("C:", "Neuda2023", "Code", "w1d1", "npy-matlab-master");
+end
+
 addpath(genpath(code_dir))
+cd(code_dir)
+
+% check that the data is one this computer in the same exact location (in
+% this file to be safe - git will ignore data (.gitignore) so it needs to
+% be added to the repo on your device
+if ~exist('allData','dir')
+    error('Please add the allData folder from Steinmetz into this repo - Kat')
+end
 
 %% Load data
-data_dir = fullfile("C:", "Neuda2023", "Data", "Steinmetz", "allData");
-cd(data_dir)
+% genpath now sees all of the data inside allData
 sesPath = "Moniz_2017-05-15";
 
 % load all variables for session into a struct

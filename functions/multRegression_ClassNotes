@@ -1,0 +1,145 @@
+%% Multiple Regression
+
+%% Steimetz data
+% read in 
+% cd C:\Users\Admin\Desktop\Data\Steinmetz\Cori_2016-12-14
+% C:\Users\Admin\Desktop\Code\
+% cd C:\Users\Admin\Desktop\Workspace
+%% Fish data 
+% Are any cells activity related to eye position
+figure
+plot( data.Eye_full(2,:),'-') % visualize inferred saccades
+
+Pred = [ ones(numFrames,1) data.Eye_full']; % the predictors ; add ones for intercept
+coefs= zeros(numCells,3); R2 = zeros(numCells,1); pvals=zeros(numCells,1);
+for ii=1:numCells
+    [b, bint, r, rint,stats] = regress( squeeze(dat(ii,:)'), Pred );
+    coefs(ii,:) = b';
+    R2(ii) = stats(1); 
+end
+
+% plot X and Y locations of cells that respond modestly in red on grey background
+respCells= find(R2>0.1); % 10% variance predicted is a modest amount different from 0
+figure(10) % keep track of figure; we will add to it later
+plot(data.CellXYZ_norm(:,1),data.CellXYZ_norm(:,2),'.','Color',[.8 .8 .8]) % light grey BG
+hold on
+plot(data.CellXYZ_norm(respCells,1),data.CellXYZ_norm(respCells,2),'.','Color',[1 0 0]) 
+
+figure % now X & Z 
+plot(data.CellXYZ_norm(:,1),data.CellXYZ_norm(:,3),'.','Color',[.8 .8 .8])
+hold on
+plot(data.CellXYZ_norm(respCells,1),data.CellXYZ_norm(respCells,3),'.','Color',[1 0 0])
+
+figure % Z & Y
+plot(data.CellXYZ_norm(:,3),data.CellXYZ_norm(:,2),'.','Color',[.8 .8 .8])
+hold on
+plot(data.CellXYZ_norm(respCells,3),data.CellXYZ_norm(respCells,2),'.','Color',[1 0 0])
+
+% Do cells respond equally to each direction or do some prefer one direction?
+% Plot coefficients of direction (not intercepts)
+figure
+plot(coefs(respCells,2),coefs(respCells,3),'o')
+% what does this tell you?
+
+figure(10)
+subset1 = find(R2 > .1 & coefs(:,2)>.5 & coefs(:,3)<.5);
+plot(data.CellXYZ_norm(subset1,1),data.CellXYZ_norm(subset1,2),'.','Color',[1 .5 0]) 
+
+% How about eye movement?
+% show inferred eye velocities 
+figure
+plot( diff(data.Eye_full(2,:)'),'-')
+% zoom in to a section around frames 400-420
+% We often want to use motion, rather than position, as a regressor
+% Simple differences of positions are often much rougher (noisier) than real motion (Why?)
+% How could you smooth this? (Hint: look up movmean)
+smoothEyeLoc = movmean(data.Eye_full,3);
+
+Pred = [ ones(numFrames-1,1) diff(data.Eye_full')];
+coefs2 = zeros(numCells,3); R2 = zeros(numCells,1); pvals=zeros(numCells,1);
+for ii=1:numCells
+    [b, bint, r, rint,stats] = regress( squeeze(dat(ii,2:numFrames)'), Pred );
+    coefs2(ii,:) = b';
+    R2(ii) = stats(1); 
+end
+
+respCells2= find(R2>0.1);
+figure
+plot(data.CellXYZ_norm(:,1),data.CellXYZ_norm(:,2),'.','Color',[.8 .8 .8])
+hold on
+plot(data.CellXYZ_norm(respCells2,1),data.CellXYZ_norm(respCells2,2),'.','Color',[1 0 0])
+
+
+%% Now test (inferred) tail motion
+figure; hold on
+plot(data.Behavior_full_motorseed(1,:))
+plot(data.Behavior_full(4,:),'r')
+hold
+% now do regressions: 
+Pred = [ ones(numFrames,1) data.Behavior_full(4:5,:)' data.Behavior_full_motorseed'];
+coefs3 = zeros(numCells,5); R2 = zeros(numCells,1); pvals=zeros(numCells,1);
+for ii=1:numCells
+    [b, bint, r, ~,stats] = regress( squeeze(dat(ii,:)'), Pred ); % why transpose?
+    coefs3(ii,:) = b';
+    R2(ii) = stats(1); 
+end
+
+% where are cells that seem related to activity?
+respCells3= find(R2>0.1);
+figure
+plot(data.CellXYZ_norm(:,1),data.CellXYZ_norm(:,2),'.','Color',[.8 .8 .8])
+hold on
+plot(data.CellXYZ_norm(respCells3,1),data.CellXYZ_norm(respCells3,2),'.','Color',[1 0 0])
+
+% How are coefficients related?
+figure; 
+scatter(coefs3(respCells3,2),coefs3(respCells3,3))
+
+%% Now try reverse: predict eye positions from neurons - start with first 1,000
+Pred = [ ones(numFrames,1)  dat(1:1000,:)'];
+[b, bint, r,~,stats] = regress( data.Eye_full(1,:)', Pred); % why transpose?
+stats(1) % R^2 
+bar(b(2:length(b)))
+% Do you really think all these neurons are involved?
+
+% now regress on completely random predictors
+Pred2 =  [ ones(numFrames,1)  randn(numFrames,1000)];
+[b, bint, r,~,stats] = regress( data.Eye_full(1,:)', Pred2); % why transpose?
+stats(1)
+bar(b(2:length(b)))
+% Try it again with 2000
+% What gives?
+% this is called over-fitting
+
+
+%% Ways to reduce over-fitting
+% default LASSO to prune down likely list of neurons
+Pred = [ ones(numFrames,1)  dat(1:5000,:)']; % we'll 
+B = lasso( Pred, data.Eye_full(1,:)' );
+% B contains coefficients that are estimated with various penalties (default 100)
+figure
+numNonZeros = sum(B~=0); % adds up all zero coefficients
+plot(numNonZeros);  % where do you get ~50 non-zero coefficients 
+yline(50)
+figure; bar(B(:,90))
+
+% Let's look inside
+[B, fitInfo] = lasso( Pred, data.Eye_full(1,:)' );
+% What values of lambda the reg parameter did MATLAB use?
+plot(fitInfo.Lambda) % looks non-linear
+plot(log(fitInfo.Lambda)) % MATLAB picks parameters evenly by logarithm
+plot(fitInfo.MSE) % goes from
+% where do you draw the line?
+% What's a reasonable error?
+
+%% Now try cross-validation to pick lambda
+% 10-fold this takes a while
+[B, fitInfo] = lasso( Pred, data.Eye_full(1,:)' ,'CV',10);
+lassoPlot(B,fitInfo,'PlotType','CV'); % makes new figure
+legend('show')
+% The green circle and dotted line indicate the Lambda with minimum cross-validation error. 
+% The blue circle and dotted line indicate the point with minimum cross-validation error plus one standard error.
+% What value of lambda seems best? what's the predictive error?
+% Which neurons have large coefficients?
+
+

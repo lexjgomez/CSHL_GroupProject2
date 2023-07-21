@@ -2,10 +2,10 @@
 %% list of known computers: point to git repo directory on your device
 if exist(fullfile("C:", "Users", "kedea", "Documents", "CSHL_GroupProject2"),'dir')
     home_dir = 'C:\Users\kedea\Documents\CSHL_GroupProject2';
-elseif exist("C:", "Users", "course", "Documents", "CSHL_GroupProject2"),'dir')
+elseif exist(fullfile("C:", "Users", "course", "Documents", "CSHL_GroupProject2"),'dir')
     home_dir = 'C:\Users\course\Documents\CSHL_GroupProject2';
-elseif exist(fullfile("Users", "carolinejia", "Documents", "GitHub", "CSHL_GroupProject2"), 'dir')
-    home_dir = fullfile("Users", "carolinejia", "Documents", "GitHub", "CSHL_GroupProject2");
+elseif exist(fullfile("/", "Users", "carolinejia", "Documents", "GitHub", "CSHL_GroupProject2"), 'dir')
+    home_dir = fullfile("/Users", "carolinejia", "Documents", "GitHub", "CSHL_GroupProject2");
 else
     error('Add your directory to this list (or rewrite this if there is a better way) - Kat')
 % code_dir = fullfile("C:", "Neuda2023", "Code", "w1d1", "npy-matlab-master");

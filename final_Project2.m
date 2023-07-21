@@ -1,6 +1,19 @@
 %% Directory path across computers
 
-% list of known computers: point to git repo directory on your device
+%% Load Helper Functions functions
+code_dir = fullfile("C:", "Neuda2023", "Code", "w1d1", "npy-matlab-master");
+addpath(genpath(code_dir))
+
+%% Load data
+data_dir = fullfile("C:", "Neuda2023", "Data", "Steinmetz", "allData");
+cd(data_dir)
+sesPath = "Moniz_2017-05-15";
+
+% load all variables for session into a struct
+S = loadSession(sesPath); % this calls a custom-coded read function for this dataset; it reads all .npy and .tsv files in the directory
+clear ses sesName sesPath
+
+%% list of known computers: point to git repo directory on your device
 if exist('C:\Users\kedea\Documents\CSHL_GroupProject2','dir')
     home_dir = 'C:\Users\kedea\Documents\CSHL_GroupProject2';
 elseif exist('C:\Users\course\Documents\CSHL_GroupProject2','dir')

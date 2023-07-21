@@ -1,7 +1,6 @@
 # CSHL_GroupProject2
 
-### Distributed coding of choice, action and engagement across the mouse brain 
-[Steinmetz,2019](https://www.nature.com/articles/s41586-019-1787-x)
+### Distributed coding of choice, action and engagement across the mouse brain, [Steinmetz,2019](https://www.nature.com/articles/s41586-019-1787-x)
 
 ## Project 2: 
 Perform multiple regression that predicts firing rate of one cell as functions of firing of other cells. Computer fano factor of each cell and determine if there’s a relationship between the cell's fano factor and its contribution for the target cell. Cycle through cells and average together the betas and fano factors to determine the average network contribution score. 

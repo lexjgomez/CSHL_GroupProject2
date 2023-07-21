@@ -1,67 +1,61 @@
-function [dat, data] = loadsession(path2data, fishID)
-%% Open and QC and display one zebrafish data set 
-% Reads data downloaded from https://figshare.com/articles/dataset/Whole-brain_light-sheet_imaging_data/7272617
-% First set fishID: fish 4 is good to start with. 
-if ~exist('fishID', 'var'), fishID = 'subject_4'; end
-% fpsec = frames per second
+function S = loadSession(sesPath)
+% function to load a session of the Steinmetz Neuropixels dataset
+% Author: Michael G. Moore, Michigan State University, 
+% Version:  V1 7/13/2019
 
-%% load accessories in .mat file - this section and next take ~10 sec
-infoFile = fullfile(path2data, fishID, 'data_full.mat');
-load(infoFile) % load information
-times = (1:length(data.stim_full))'/data.fpsec; % vector of imaging times
+% sesPath   is the directory name of the session, including any required 
+%           path information
 
-validCells = setdiff( 1:size(data.CellXYZ,1), data.IX_inval_anat);
-N = length(validCells);
-data.CellXYZ = data.CellXYZ(validCells,:);
-data.CellXYZ_norm = data.CellXYZ_norm(validCells,:);
-%plot3(data.CellXYZ_norm(:,1),data.CellXYZ_norm(:,2),data.CellXYZ_norm(:,3),'.') % z-values inferred from imaging planes
-%xlabel('X'); ylabel('Y'); zlabel('Z'); title('3D Locations of Cells'); grid
+% S         a data structure containing all the session variables      
+
+%% the npy-matlab-master package must be accessible to this function
+
+S = struct;
+S.sesPath = sesPath;
+
+% get session name
+temp = strsplit(sesPath,filesep);
+S.sesName = temp{end};
 
 
-%% load calcium traces in HDF5 file and trim suspect frames - 5-10 sec - 30 sec if display 
-datFile = fullfile(path2data, fishID, 'TimeSeries.h5');% data file
-dat = h5read(datFile,'/CellResp'); % ,[1 1],[15000 1650] for subset
+% list all files and info
+fdir = dir(sesPath);
+fdir = fdir(3:end);
 
-% The last two frames of fish 7 time series seem discontinuous with the preceding images
-if fishID == "subject_7"
-    goodFrames = 1:size(dat,2)-2;
-else
-    goodFrames = 1:size(dat,2);
+S.fileList = fdir;  
+
+% examine each file and either read it into Matlab or ignore it
+for f = 1:length(fdir)
+    % check if file or subdirectory (should be unecessary)
+    if fdir(f).isdir
+        continue
+    end
+    % get file type
+    temp = strsplit(fdir(f).name,'.');
+    ftype = temp{end};
+    fields = temp(1:(end-1));
+    % keep only .npy and .tsv files
+    if ~isequal(ftype,'npy') && ~isequal(ftype,'tsv')
+        continue
+    end
+    % check fields for valid names
+    for m = 1:length(fields)
+        % Modify the names so that they are valid Matlab variable names
+        %   if first character is not a letter, will prefix an "x" 
+        %   whitespace will be deleted
+        %   whitespace followed by a letter will be replaced by the capitalized letter
+        %   invalid characters will be replaced by underscore
+        fields{m} = matlab.lang.makeValidName(fields{m});
+    end
+    % read the .npy and .tsv files
+    if isequal(ftype,'npy')
+        val = readNPY([sesPath filesep fdir(f).name]);
+    elseif isequal(ftype,'tsv')
+        val = tdfread([sesPath filesep fdir(f).name]);
+    end      
+    % create a field of S using fields and val 
+    S = setfield(S,fields{1:end},val);
+   
 end
-if length(goodFrames) < size(dat,2) % 
-    times=times(goodFrames);
-    dat = dat(goodFrames,:);
-    data.Behavior_full = data.Behavior_full(:,goodFrames);
-    data.stim_full = data.stim_full(goodFrames);
-    data.Eye_full = data.Eye_full(:,goodFrames);
+
 end
-numFrames = size(dat,1);
-%
-%figure; imagesc(times,1:size(dat,1), sqrt(dat)); grid % most values around 1; skewed distn with values up to ~14
-fluomeans = mean(dat,2);
-fluoSDs = std(dat,0,2);
-
-
-%% If not already log-scale, then Log transform and transpose
-% I'm checking crudely here...
-% Some transform should be done for data from each fish depending on characteristics
-if all(dat(:) > 0)
-    dat = log(dat'); "Log transform"
-else
-    dat = dat';
-end
-
-%% Crude drift correction
-% should check for drift in a more sophisticated way
-xx = [ ones(size(dat,1),1) times]; % predictors for drift
-tmp = xx \ dat; % estimate mean drift rates
-drifts = tmp(2,:)'; intcpts = tmp(1,:)';
-% typically offsets between 0 and 0.5 for fish 1
-% typical drifts between -5E-4 and 5E-4 for fish 1
-% these are actually substantial: a difference of 0.5 for 1250 cells and
-% greater than half of cell SD for 24K neurons
-
-dat = dat - xx * tmp ; % compensate drift
-
-
-

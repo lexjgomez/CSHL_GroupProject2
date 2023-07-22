@@ -55,8 +55,17 @@ unit_selected = randsample(length(region_neurons), num_sample);
 %% get spike data and downsample
 [spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons);
 spike_counts_downsample = spike_counts(:, unit_selected);
+allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
 
-figure; 
+%% Plot some raw data 
+
+figure;
+imagesc(sum(allSpikesperTrial_downsample,3))
+colorbar
+xlabel('Time Bins [100 ms]')
+ylabel('Neuron')
+title('Summed Spikes Over Time Bins per Neuron')
+
 
 %% Multiple regression
 
@@ -70,7 +79,7 @@ TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
 figure; histogram(R_squared);
-xlabel = 'R²';
+xlabel('R²');
 
 
 %% Fano Factors 

@@ -42,27 +42,52 @@ region_neurons = find(neurons.region == region_index);
 % How many neurons in each region?
 num_unit_all = length(region_neurons);
 num_sample = 51;
-num_trial = trials.N;
 
 rng(10); %setting our random number generator
 unit_selected = randsample(length(region_neurons), num_sample); %randomly selecting neurons
 
-%% Clean up data
-%get rid of outliers
-
-% pick out units that responded after stimulus, 99% confidence
-
-
 %% get spike data and downsample
-[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons);
+
+[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); %neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
 
 %downsample everything
 spike_counts_downsample = spike_counts(:, unit_selected);
 allSpikes_downsample = allSpikes(unit_selected,:);
 allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
 
+%% Plot some raw data 
+
+figure;
+imagesc(sum(allSpikesperTrial_downsample,3))
+colorbar
+xlabel('Time Bins [100 ms]')
+ylabel('Neuron')
+title('Summed Spikes Over Time Bins per Neuron')
+
+
 %% Plot neuron by neuron 
 
+
+
+%% Pull Out Responsive Cells
+
+% pick out units that responded after stimulus, paired t-test
+num_unit_all = length(region_neurons);
+[responsiveUnits, nonresponsiveUnits] = classify_by_response(allSpikesperTrial,num_unit_all);
+
+num_sample = 51;
+
+unit_selected_resp = randsample(size(responsiveUnits,1), num_sample);
+unit_selected_nonresp = randsample(size(nonresponsiveUnits,1), num_sample);
+
+selected_Responsive = responsiveUnits(unit_selected_resp,:,:);
+selected_Unresponsive = nonresponsiveUnits(unit_selected_nonresp,:,:);
+
+norm_Selected_Responsive = selected_Responsive./max(selected_Responsive,2);
+
+figure; plot(squeeze(mean(norm_Selected_Responsive,1)),'r')
+hold on
+plot(mean(squeeze(mean(norm_Selected_Responsive,1)),2),'k', 'LineWidth',3)
 
 %% Multiple regression
 
@@ -76,7 +101,8 @@ TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
 figure; histogram(R_squared);
-xlabel ( 'R²')
+xlabel('R²');
+
 
 
 %% Fano Factors 

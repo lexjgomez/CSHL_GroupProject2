@@ -1,4 +1,4 @@
-function Predicted = imultipleregress(spike_counts_downsample)
+function Predicted = imultipleregress(spike_counts_downsample,num_sample)
 
 
 Loss = nan(1, num_sample);

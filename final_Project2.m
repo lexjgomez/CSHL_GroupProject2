@@ -43,14 +43,23 @@ region_neurons = find(neurons.region == region_index);
 num_unit_all = length(region_neurons);
 num_sample = 51;
 
-unit_selected = randsample(length(region_neurons), num_sample);
+rng(10); %setting our random number generator
+unit_selected = randsample(length(region_neurons), num_sample); %randomly selecting neurons
 
 %% get spike data and downsample
+
 [spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); %neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
 
 spike_counts_downsample = spike_counts(:, unit_selected);
 
-figure; 
+
+%downsample everything
+spike_counts_downsample = spike_counts(:, unit_selected);
+allSpikes_downsample = allSpikes(unit_selected,:);
+allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
+
+%% Plot neuron by neuron 
+
 
 
 %% Pull Out Responsive Cells
@@ -85,14 +94,14 @@ TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
 figure; histogram(R_squared);
-xlabel = 'R²';
+xlabel ( 'R²')
 
 
 %% Fano Factors 
 
 %spike_counts_downsample = time x neurons 
 % example cell figure 
-ifanofactor (numNeurons)
+fanos = ifanofactor (allSpikes_downsample);
 % choose high predictor cells 
 
 %% Multiple Regression Behavior from Neurons

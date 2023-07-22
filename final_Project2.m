@@ -65,9 +65,13 @@ for i = 1 : num_sample
     Predicted(:, i) = kfoldPredict(Mdl);
 end
 
-RSS = NaN % START HERE
+% R-squared calculation
+RSS = (spike_counts_downsample - Predicted) .^ 2;
+RSS = mean(RSS, 1);
+TSS = (spike_counts_downsample - mean(spike_counts_downsample, 1)) .^ 2;
+TSS = mean(TSS, 1);
 
-
+R_squared = 1 - (RSS./TSS);
 
 
 %% Multiple Regression Behavior from Neurons

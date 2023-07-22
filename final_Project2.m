@@ -7,7 +7,9 @@ if exist(fullfile('C:', 'Users', 'kedea', 'Documents', 'CSHL_GroupProject2'),'di
 elseif exist(fullfile('C:', 'Users', 'course', 'Documents', 'CSHL_GroupProject2'),'dir')
     home_dir = 'C:\Users\course\Documents\CSHL_GroupProject2';
 elseif exist(fullfile('/', 'Users', 'carolinejia', 'Documents', 'GitHub', 'CSHL_GroupProject2'), 'dir')
-    home_dir = fullfile('/Users', 'carolinejia', 'Documents', 'GitHub', 'CSHL_GroupProject2');
+    home_dir = fullfile('/Users', 'carolinejia', 'Documents', 'CSHL_GroupProject2');
+elseif exist(fullfile('C:', 'Users', 'Admin', 'Documents', 'CSHL_GroupProject2'), 'dir')
+    home_dir = fullfile('C:\Users\Admin\Documents\CSHL_GroupProject2');
 else
     error('Add your directory to this list (or rewrite this if there is a better way) - Kat')
 % code_dir = fullfile('C:', 'Neuda2023', 'Code', 'w1d1', 'npy-matlab-master');
@@ -44,28 +46,20 @@ num_trial = trials.N;
 
 unit_selected = randsample(length(region_neurons), num_sample);
 
-% get spike data and downsample
-spike_counts = get_spike_counts(trials, S, region_neurons);
-spike_counts_downsample = spike_counts(:, unit_selected);
-
 %% Clean up data
 %get rid of outliers
 
+% pick out units that responded after stimulus, 99% confidence
+
+
+%% get spike data and downsample
+spike_counts = get_spike_counts(trials, S, region_neurons);
+spike_counts_downsample = spike_counts(:, unit_selected);
+
+
 %% Multiple regression
 
-Loss = nan(1, num_sample);
-Predicted = nan(size(spike_counts_downsample));
-for i = 1 : num_sample
-
-    Y = spike_counts_downsample(:, i);
-    X = spike_counts_downsample;
-    X(:, i) = [];
-
-    % cross validation with lasso regularization
-    Mdl = fitrlinear(X,Y, 'Learner','leastsquares','CrossVal','on','Regularization','lasso');
-    Loss(i) = kfoldLoss(Mdl);
-    Predicted(:, i) = kfoldPredict(Mdl);
-end
+Predicted = imultipleregress(spike_counts_downsample);
 
 % R-squared calculation
 RSS = (spike_counts_downsample - Predicted) .^ 2;
@@ -74,7 +68,15 @@ TSS = (spike_counts_downsample - mean(spike_counts_downsample, 1)) .^ 2;
 TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
+figure; histogram(R_squared);
+xlabel = 'R'
 
+
+%% Fano Factors 
+
+% example cell figure 
+
+% choose high predictor cells 
 
 %% Multiple Regression Behavior from Neurons
 

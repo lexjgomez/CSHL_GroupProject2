@@ -87,7 +87,8 @@ fanos = ifanofactor (allSpikes_downsample);
 % choose high predictor cells 
 
 %% Multiple Regression Behavior from Neurons
-
+selectedBehavior = trials.responseLatency; %response time per trial; use multiple neurons to predict 
+iregressbehavior(allSpikes_downsample,selectedBehavior)
 
 
 %% Scaling up - apply to multiple brain areas 

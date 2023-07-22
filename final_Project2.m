@@ -53,13 +53,14 @@ unit_selected = randsample(length(region_neurons), num_sample);
 
 
 %% get spike data and downsample
-spike_counts = get_spike_counts(trials, S, region_neurons);
+[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons);
 spike_counts_downsample = spike_counts(:, unit_selected);
 
+figure; 
 
 %% Multiple regression
 
-Predicted = imultipleregress(spike_counts_downsample);
+Predicted = imultipleregress(spike_counts_downsample,num_sample);
 
 % R-squared calculation
 RSS = (spike_counts_downsample - Predicted) .^ 2;
@@ -69,13 +70,14 @@ TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
 figure; histogram(R_squared);
-xlabel = 'R'
+xlabel = 'R²';
 
 
 %% Fano Factors 
 
+%spike_counts_downsample = time x neurons 
 % example cell figure 
-
+ifanofactor (numNeurons)
 % choose high predictor cells 
 
 %% Multiple Regression Behavior from Neurons

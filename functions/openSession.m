@@ -1,8 +1,7 @@
 function [S, neurons, trials, regions] = openSession(sesPath)
 %% Specify the path to the folder containing the datasets
 if ~exist('sesPath'), sesPath = 'Moniz-05-18'; end % sample with both motor and sensory areas
-% add path to npy-matlab-master
-addpath(genpath('npy-matlab-master'))
+
 % specify path to data
 
 % load all variables for session into a struct

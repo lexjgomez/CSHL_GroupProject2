@@ -1,6 +1,6 @@
 %% pulll out responsive cells
 
-function [responsiveUnits, nonresponsiveUnits] = classify_by_response(allSpikesperTrial,num_unit_all)
+function [responsiveUnits, nonresponsiveUnits, Indices] = classify_by_response(allSpikesperTrial,num_unit_all)
 
 preStim = allSpikesperTrial(:,1:5,:);
 postStim = allSpikesperTrial(:,6:10,:);
@@ -20,6 +20,12 @@ for th = 1:num_unit_all
         check_all_Tails(th) = 0;
     end 
 end 
+
+Indices.Trial_IndiciesResponsive = find(check_all_Tails);
+    check_all_Tails_inv = abs(check_all_Tails-1);
+Indices.Trial_IndiciesNonResponsive = find(check_all_Tails_inv);
+
+
 
 %pull out cells whose fr significantly increased after stimulus
 responsiveUnits = allSpikesperTrial((storeTests<0.05 & check_all_Tails>0),:,:);

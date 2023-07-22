@@ -50,13 +50,21 @@ rng(10); %setting our random number generator
 
 [spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); %neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
 
-%don't downsample, we will do this later
-%spike_counts_downsample = spike_counts(:, unit_selected);
 
 %downsample everything
 % spike_counts_downsample = spike_counts(:, unit_selected);
 % allSpikes_downsample = allSpikes(unit_selected,:);
 % allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
+
+%% Plot some raw data 
+
+figure;
+imagesc(sum(allSpikesperTrial_downsample,3))
+colorbar
+xlabel('Time Bins [100 ms]')
+ylabel('Neuron')
+title('Summed Spikes Over Time Bins per Neuron')
+
 
 %% Plot neuron by neuron 
 
@@ -130,11 +138,6 @@ TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 
 TSS = mean(TSS, 1);
 
 R_squared = 1 - (RSS./TSS);
-figure
-subplot(1,2,1)
-histogram(R_squared);
-xlabel ( 'Responsive R²')
-
 
 %for unresponsive
 Predicted_non = imultipleregress(spike_counts_nonresp_downsample);

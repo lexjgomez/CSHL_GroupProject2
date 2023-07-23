@@ -127,8 +127,7 @@ ylabel('Neuron')
 title('Summed Unresponsive Spikes')
 
 
-
-%% Multiple regression
+%% Multiple Regression - ALL TIMES
 
 %for responsive
 Predicted = imultipleregress(spike_counts_resp_downsample);
@@ -160,6 +159,7 @@ xlabel('Responsive R²')
 subplot(1,2,2)
 histogram(unr_R_squared);
 xlabel('Non-responsive R²')
+linkaxes
 
 %% Fano Factors 
 
@@ -175,6 +175,87 @@ unr_fanos = ifanofactor (selected_Unresponsive);
 % factors
 figure; boxplot([resp_fanos, resp_R_squared', unr_fanos, unr_R_squared'])
 xticklabels({'Responsive FFs', 'Responsive r^2', 'Unrsponsive FFs', 'Unresponsive r^2'})
+
+
+
+%% Multiple Regression Part DEUX - Pre and Post Stimulus
+
+%get the stimulus times in the same format as spike_counts
+stim_counts = get_trial_counts(trials);
+
+%concatenate pre times and post times
+
+concatResponsivePre = []; concatResponsivePost = [];
+concatUnresponsivePre = []; concatUnresponsivePost = [];
+for stimIdx = 1:length(stim_counts)
+    curStimCount = stim_counts(stimIdx);
+    if curStimCount == 1
+        %get time window of stim
+        % curPreTimesResp =  spike_counts_resp_downsample((stimIdx-5):(stimIdx+4));
+        
+        curPreTimesResp = spike_counts_resp_downsample(((stimIdx-5):stimIdx-1),:);
+        curPostTimesResp = spike_counts_resp_downsample((stimIdx:(stimIdx+4)),:);
+            
+            concatResponsivePre = [concatResponsivePre; curPreTimesResp];
+            concatResponsivePost = [concatResponsivePost; curPostTimesResp];
+
+        curPreTimesNonResp = spike_counts_resp_downsample(((stimIdx-5):stimIdx-1),:);
+        curPostTimesNonResp = spike_counts_resp_downsample((stimIdx:(stimIdx+4)),:);
+                
+            concatUnresponsivePre = [concatUnresponsivePre; curPreTimesNonResp];
+            concatUnresponsivePost = [concatUnresponsivePost; curPostTimesNonResp];
+
+    end 
+end 
+
+all_concats = zeros(4,size(concatUnresponsivePre,1),size(concatUnresponsivePre,2));
+all_concats(1,:,:) = concatResponsivePre;
+all_concats(2,:,:) = concatResponsivePost;
+all_concats(3,:,:) = concatUnresponsivePre;
+all_concats(4,:,:) = concatUnresponsivePost;
+
+for feedMeSemour = 1:4
+
+    %for responsive
+    Predicted = imultipleregress(spike_counts_resp_downsample);
+    
+    % R-squared calculation
+    RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
+    RSS = mean(RSS, 1);
+    TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
+    TSS = mean(TSS, 1);
+    
+    resp_R_squared = 1 - (RSS./TSS);
+    
+    %for unresponsive
+    Predicted_non = imultipleregress(spike_counts_nonresp_downsample);
+    
+    % R-squared calculation
+    RSS_n = (spike_counts_nonresp_downsample - Predicted_non) .^ 2;
+    RSS_n = mean(RSS_n, 1);
+    TSS_n = (spike_counts_nonresp_downsample - mean(spike_counts_nonresp_downsample, 1)) .^ 2;
+    TSS_n = mean(TSS_n, 1);
+    
+    unr_R_squared = 1 - (RSS_n./TSS_n);
+    
+    figure 
+    subplot(1,2,1)
+    histogram(resp_R_squared);
+    xlabel('Responsive R²')
+    
+    subplot(1,2,2)
+    histogram(unr_R_squared);
+    xlabel('Non-responsive R²')
+    linkaxes
+
+    %fano factors
+    resp_fanos = ifanofactor (selected_Responsive);
+    unr_fanos = ifanofactor (selected_Unresponsive);
+
+    figure; boxplot([resp_fanos, resp_R_squared', unr_fanos, unr_R_squared'])
+    xticklabels({'Responsive FFs', 'Responsive r^2', 'Unrsponsive FFs', 'Unresponsive r^2'})
+
+end 
 
 %% Multiple Regression Behavior from Neurons
 

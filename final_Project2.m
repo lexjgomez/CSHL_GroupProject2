@@ -126,7 +126,6 @@ title('Summed Unresponsive Spikes')
 
 %for unresponsive
 Predicted_non = imultipleregress(spike_counts_nonresp_downsample);
-
 % R-squared calculation
 RSS_n = (spike_counts_nonresp_downsample - Predicted_non) .^ 2;
 RSS_n = mean(RSS_n, 1);
@@ -134,6 +133,17 @@ TSS_n = (spike_counts_nonresp_downsample - mean(spike_counts_nonresp_downsample,
 TSS_n = mean(TSS_n, 1);
 
 unr_R_squared = 1 - (RSS_n./TSS_n);
+
+
+%for responsive
+Predicted = imultipleregress(spike_counts_resp_downsample);
+% R-squared calculation
+RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
+RSS = mean(RSS, 1);
+TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
+TSS = mean(TSS, 1);
+
+resp_R_squared = 1 - (RSS./TSS);
 
 figure 
 subplot(1,2,1)
@@ -145,20 +155,18 @@ histogram(unr_R_squared);
 xlabel('Non-responsive R²')
 linkaxes
 
-%for responsive
-Predicted = imultipleregress(spike_counts_resp_downsample);
-
-% R-squared calculation
-RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
-RSS = mean(RSS, 1);
-TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
-TSS = mean(TSS, 1);
-
-resp_R_squared = 1 - (RSS./TSS);
-
 %% Perform Multiple Regression on varying number of neurons 
 %this takes forever to run
-Predicted = iVarymultipleregress(spike_counts_downsample);
+R_squared = iVarymultipleregress(spike_counts_resp_downsample);
+
+avgR2 = mean(R_squared,1);
+err = std(R_squared)/sqrt(length(R_squared));
+
+figure()
+errorbar([1:num_sample-1], avgR2, err)
+ylim([0,0.4])
+xlabel('Number of Predictor Neurons'); ylabel('R²');
+title(" The effect of increasing the number of Predictors")
 
 
 %% Fano Factors 
@@ -312,8 +320,20 @@ linkaxes
 
 %% Multiple Regression Behavior from Neurons
 selectedBehavior = trials.responseLatency; %response time per trial; use multiple neurons to predict 
-iregressbehavior(allSpikes_downsample,selectedBehavior)
+RespSpikesPerTrial = squeeze(mean(selected_Responsive,2));
 
+Predicted = iregressbehavior(spikes,selectedBehavior);
+
+% correlation figure 
+figure; 
+title('Relationship between Fano Factor and R^2')
+
+subplot(1,2,1)
+scatter(resp_fanos,resp_R_squared)
+legend(['r = ' num2str(resp_cor)]);
+ylabel('R squared')
+xlabel('Fano Factor')
+subtitle('Reponsive Neurons')
 
 %% Scaling up - apply to multiple brain areas 
 region1 = 'VISp';

@@ -1,4 +1,4 @@
-function Predicted = iVarymultipleregress(spike_counts_downsample)
+function R_squared = iVarymultipleregress(spike_counts_downsample)
 
 num_sample = size(spike_counts_downsample,2);
 R_squared = nan(num_sample,num_sample-1);
@@ -21,14 +21,6 @@ for n= 1:num_sample %loop through all the neurons
         end
 end 
 
-avgR2 = mean(R_squared,1);
-err = std(R_squared)/sqrt(length(R_squared));
-
-figure()
-errorbar([1:num_sample-1], avgR2, err)
-ylim([0,0.4])
-xlabel('Number of Predictor Neurons'); ylabel('R²');
-title(" The effect of increasing the number of Predictors")
 
 
 

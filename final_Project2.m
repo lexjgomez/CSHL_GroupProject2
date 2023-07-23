@@ -147,12 +147,18 @@ resp_R_squared = 1 - (RSS./TSS);
 
 figure 
 subplot(1,2,1)
-histogram(resp_R_squared);
+histogram(resp_R_squared, -0.1:0.1:0.6);
 xlabel('Responsive R²')
+ylim([0 35])
+set(gca, 'box', 'off');
+set(gca, 'tickdir', 'out');
 
 subplot(1,2,2)
-histogram(unr_R_squared);
+histogram(unr_R_squared, -0.1:0.1:0.6);
 xlabel('Non-responsive R²')
+ylim([0 35])
+set(gca, 'box', 'off');
+set(gca, 'tickdir', 'out');
 linkaxes
 
 %% Perform Multiple Regression on varying number of neurons 

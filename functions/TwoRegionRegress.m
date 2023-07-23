@@ -47,7 +47,7 @@ R_squared1 = 1 - (RSS./TSS);
 
 figure;
 subplot(1,2,1);
-histogram(R_squared1);
+histogram(R_squared1, -0.1:0.1:0.6);
 xlabel('R squared');
 ylabel('Number of Neurons');
 title('Brain Region 1 (Predicted by region 2)');
@@ -64,7 +64,7 @@ TSS = mean(TSS, 1);
 R_squared2 = 1 - (RSS./TSS);
 
 subplot(1,2,2);
-histogram(R_squared2);
+histogram(R_squared2, -0.1:0.1:0.6);
 xlabel('R squared');
 ylabel('Number of Neurons');
 title('Brain Region 2 (Predicted by region 1)');

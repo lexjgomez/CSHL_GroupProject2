@@ -30,14 +30,14 @@ set(gca,'YScale','log')
 %Now make a histogram of the fano factors in this region
 %Not really that meaningful, as what matters is the proportion above and
 %below 1
-figure
-nBins = 31; 
-h = histogram(fanos,nBins);
-h.FaceColor = 'k';
-h.FaceAlpha = 1;
-h.EdgeColor = 'w';
-ylim([0 max(h.Values)+1])
-line([1 1], [0 max(h.Values)+1],'color', 'r', 'linewidth', 3 )
-xlabel('Fano factor')
-ylabel('Number of neurons per bin')
-movshonize(26,1); makeWhite
+% figure
+% nBins = 31; 
+% h = histogram(fanos,nBins);
+% h.FaceColor = 'k';
+% h.FaceAlpha = 1;
+% h.EdgeColor = 'w';
+% ylim([0 max(h.Values)+1])
+% line([1 1], [0 max(h.Values)+1],'color', 'r', 'linewidth', 3 )
+% xlabel('Fano factor')
+% ylabel('Number of neurons per bin')
+% movshonize(26,1); 

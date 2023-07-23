@@ -1,6 +1,6 @@
 function Predicted = imultipleregress(spike_counts_downsample,num_sample)
 
-
+num_sample = size(spike_counts_downsample,2);
 Loss = nan(1, num_sample);
 Predicted = nan(size(spike_counts_downsample));
 for i = 1 : num_sample

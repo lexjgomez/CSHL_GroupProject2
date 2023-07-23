@@ -179,7 +179,7 @@ title('Overview of results by responsiveness')
 
 % correlation value
 resp_cor = corr(resp_fanos,resp_R_squared');
-unr_cor = corr(unr_fanos,unr_R_squared');
+cor2 = corr(unr_fanos,unr_R_squared');
 
 % correlation figure 
 figure; 
@@ -194,12 +194,10 @@ subtitle('Reponsive Neurons')
 
 subplot(1,2,2)
 scatter(unr_fanos,unr_R_squared)
-legend(['r = ' num2str(unr_cor)]);
+legend(['r = ' num2str(cor2)]);
 ylabel('R squared')
 xlabel('Fano Factor')
 subtitle('Unreponsive Neurons')
-
-
 
 
 %% Multiple Regression Part DEUX - Pre and Post Stimulus
@@ -326,8 +324,44 @@ region_index = find(strcmp(regions.name, region2));
 region_neurons_2 = find(neurons.region == region_index);
 
 
-[spike_counts_1, ~, ~] = get_spike_counts(trials, S, region_neurons_1); 
-[spike_counts_2, ~, ~] = get_spike_counts(trials, S, region_neurons_2);
+[spike_counts_1, ~, allSpikesperTrial1] = get_spike_counts(trials, S, region_neurons_1); 
+[spike_counts_2, ~, allSpikesperTrial2] = get_spike_counts(trials, S, region_neurons_2);
 
+% pull out the r squared after regressing across two brain areas
+[Predicted1, Predicted2,R_squared1,R_squared2, units_region1, units_region2] = ...
+    TwoRegionRegress(spike_counts_1,spike_counts_2, num_sample);
 
-[Predicted1, Predicted2] = TwoRegionRegress(spike_counts_1,spike_counts_2, num_sample);
+%% Fano Factors across regions
+
+%spike_counts_downsample = time x neurons 
+% figures for responsive and unresponsive cell groups
+fanos1 = ifanofactor (allSpikesperTrial1(units_region1,:,:));
+fanos2 = ifanofactor (allSpikesperTrial2(units_region2,:,:));
+
+% correlation value
+fanos1 = fanos1(~isnan(fanos1));
+R_squared1 = R_squared1(~isnan(R_squared1));
+cor1 = corr(fanos1,R_squared1');
+% remove nan spike 
+fanos2 = fanos2(~isnan(fanos2));
+R_squared2 = R_squared2(~isnan(R_squared2));
+cor2 = corr(fanos2,R_squared2');
+
+% correlation figure 
+figure; 
+title('Relationship between Fano Factor and R^2')
+
+subplot(1,2,1)
+scatter(fanos1,R_squared1)
+legend(['r = ' num2str(cor1)]);
+ylabel('R squared')
+xlabel('Fano Factor')
+subtitle('Region 1')
+
+subplot(1,2,2)
+scatter(fanos2,R_squared2)
+legend(['r = ' num2str(cor2)]);
+ylabel('R squared')
+xlabel('Fano Factor')
+subtitle('Region 2')
+

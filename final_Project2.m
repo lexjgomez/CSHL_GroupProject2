@@ -26,7 +26,7 @@ if ~exist('allData','dir')
 end
 
 % set random number generator seed 
-rng(10); 
+rng(5); 
 
 %% Load data
 whichMouse = 'Cori_2016-12-14';
@@ -175,6 +175,30 @@ unr_fanos = ifanofactor (selected_Unresponsive);
 % factors
 figure; boxplot([resp_fanos, resp_R_squared', unr_fanos, unr_R_squared'])
 xticklabels({'Responsive FFs', 'Responsive r^2', 'Unrsponsive FFs', 'Unresponsive r^2'})
+title('Overview of results by responsiveness')
+
+% correlation value
+resp_cor = corr(resp_fanos,resp_R_squared');
+unr_cor = corr(unr_fanos,unr_R_squared');
+
+% correlation figure 
+figure; 
+title('Relationship between Fano Factor and R^2')
+
+subplot(1,2,1)
+scatter(resp_fanos,resp_R_squared)
+legend(['r = ' num2str(resp_cor)]);
+ylabel('R squared')
+xlabel('Fano Factor')
+subtitle('Reponsive Neurons')
+
+subplot(1,2,2)
+scatter(unr_fanos,unr_R_squared)
+legend(['r = ' num2str(unr_cor)]);
+ylabel('R squared')
+xlabel('Fano Factor')
+subtitle('Unreponsive Neurons')
+
 
 %% Multiple Regression Behavior from Neurons
 

@@ -237,49 +237,80 @@ all_concats(1,:,:) = concatResponsivePre;
 all_concats(2,:,:) = concatResponsivePost;
 all_concats(3,:,:) = concatUnresponsivePre;
 all_concats(4,:,:) = concatUnresponsivePost;
+all_concat_names = {'Resp_Pre','Resp_Post','Unresp_Pre','Unresp_Post'};
 
-for feedMeSemour = 1:4
+numTrials = length(trials.visStimTime);
+
+for feedMeSeymour = 1:4
+
+    curConcats = squeeze(all_concats(feedMeSeymour,:,:));
+    curConcatName = char(all_concat_names(feedMeSeymour)); 
+
 
     %for responsive
-    Predicted = imultipleregress(spike_counts_resp_downsample);
+    Predicted = imultipleregress(curConcats);
     
     % R-squared calculation
-    RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
+    RSS = (curConcats - Predicted) .^ 2;
     RSS = mean(RSS, 1);
-    TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
+    TSS = (curConcats - mean(curConcats, 1)) .^ 2;
     TSS = mean(TSS, 1);
     
-    resp_R_squared = 1 - (RSS./TSS);
+    concat_R_squared = 1 - (RSS./TSS);
     
-    %for unresponsive
-    Predicted_non = imultipleregress(spike_counts_nonresp_downsample);
-    
-    % R-squared calculation
-    RSS_n = (spike_counts_nonresp_downsample - Predicted_non) .^ 2;
-    RSS_n = mean(RSS_n, 1);
-    TSS_n = (spike_counts_nonresp_downsample - mean(spike_counts_nonresp_downsample, 1)) .^ 2;
-    TSS_n = mean(TSS_n, 1);
-    
-    unr_R_squared = 1 - (RSS_n./TSS_n);
-    
-    figure 
-    subplot(1,2,1)
-    histogram(resp_R_squared);
-    xlabel('Responsive R²')
-    
-    subplot(1,2,2)
-    histogram(unr_R_squared);
-    xlabel('Non-responsive R²')
-    linkaxes
+    figure(200)
+    subplot(1,4,feedMeSeymour)
+    histogram(concat_R_squared);
+    xline(0,'r')
+    xlabel([curConcatName ' R²'])
+    title(curConcatName)
 
     %fano factors
-    resp_fanos = ifanofactor (selected_Responsive);
-    unr_fanos = ifanofactor (selected_Unresponsive);
+    %reshape shit so that the fanny factors work
+    concatFannyShaped = [];
+    for fannyShape = 1:num_sample
+        curNeuronConcatMtx = curConcats(:, fannyShape).';
+        curNeuronConcatMtx = reshape(curNeuronConcatMtx,[5,numTrials]);
+        concatFannyShaped(fannyShape,:,:) = curNeuronConcatMtx; 
+    end 
 
-    figure; boxplot([resp_fanos, resp_R_squared', unr_fanos, unr_R_squared'])
-    xticklabels({'Responsive FFs', 'Responsive r^2', 'Unrsponsive FFs', 'Unresponsive r^2'})
+    concat_fanos = ifanofactor (concatFannyShaped);
+
+    figure(201); 
+    subplot(1,4,feedMeSeymour)
+    boxplot([concat_fanos, concat_R_squared'])
+    xticklabels({[curConcatName ' FFs'], [curConcatName ' r^2']})
+
+    % correlation value
+    concat_cor = corr(concat_fanos,concat_R_squared');
+    
+    % correlation figure 
+    figure(202); 
+    subplot(1,4,feedMeSeymour)
+    title('Relationship between Fano Factor and R^2')
+    
+    scatter(concat_fanos,concat_R_squared)
+    legend(['r = ' num2str(concat_cor)]);
+    ylabel('R squared')
+    xlabel('Fano Factor')
+    title([curConcatName ' Neurons'])
+
+    saveResults(feedMeSeymour).name = curConcatName;
+    saveResults(feedMeSeymour).Rsquared = concat_R_squared;
+    saveResults(feedMeSeymour).Predicted = Predicted; 
+    saveResults(feedMeSeymour).fanoFactors = concat_fanos; 
+    
 
 end 
+
+figure(200)
+linkaxes
+figure(201)
+linkaxes
+figure(202)
+linkaxes
+
+
 
 %% Multiple Regression Behavior from Neurons
 

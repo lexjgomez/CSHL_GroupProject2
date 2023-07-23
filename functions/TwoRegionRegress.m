@@ -35,8 +35,38 @@ for i = 1 : num_sample
 end
 
 
+RSS = (spike_counts_1 - Predicted1) .^ 2;
+RSS = mean(RSS, 1);
+TSS = (spike_counts_1 - mean(spike_counts_1, 1)) .^ 2;
+TSS = mean(TSS, 1);
+
+R_squared = 1 - (RSS./TSS);
+
+figure;
+subplot(1,2,1);
+histogram(R_squared);
+xlabel('R squared');
+ylabel('Number of Neurons');
+title('Brain Region 1 (Predicted by region 2)');
+set(gca, 'box', 'off');
+set(gca, 'tickdir', 'out');
 
 
+
+RSS = (spike_counts_2 - Predicted2) .^ 2;
+RSS = mean(RSS, 1);
+TSS = (spike_counts_2 - mean(spike_counts_2, 1)) .^ 2;
+TSS = mean(TSS, 1);
+
+R_squared = 1 - (RSS./TSS);
+
+subplot(1,2,2);
+histogram(R_squared);
+xlabel('R squared');
+ylabel('Number of Neurons');
+title('Brain Region 2 (Predicted by region 1)');
+set(gca, 'box', 'off');
+set(gca, 'tickdir', 'out');
 
 
 end

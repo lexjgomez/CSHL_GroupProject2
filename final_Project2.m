@@ -45,17 +45,12 @@ region_neurons = find(neurons.region == region_index);
 
 %% get spike data 
 
-[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); %neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
+% neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
+[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); 
 
-
-%downsample everything
-% spike_counts_downsample = spike_counts(:, unit_selected);
-% allSpikes_downsample = allSpikes(unit_selected,:);
-% allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
-
-
-%% Plot neuron by neuron 
-
+%% PSTH gui plotting
+spike_PSTH = get_spike_PSTH(trials, S, region_neurons);
+PSTH_GUI(spike_PSTH, trials);
 
 
 %% Pull Out Responsive Cells and Downsample
@@ -323,3 +318,16 @@ iregressbehavior(allSpikes_downsample,selectedBehavior)
 
 
 %% Scaling up - apply to multiple brain areas 
+region1 = 'VISp';
+region2 = 'MOs';
+region_index = find(strcmp(regions.name, region1));
+region_neurons_1 = find(neurons.region == region_index);
+region_index = find(strcmp(regions.name, region2));
+region_neurons_2 = find(neurons.region == region_index);
+
+
+[spike_counts_1, ~, ~] = get_spike_counts(trials, S, region_neurons_1); 
+[spike_counts_2, ~, ~] = get_spike_counts(trials, S, region_neurons_2);
+
+
+[Predicted1, Predicted2] = TwoRegionRegress(spike_counts_1,spike_counts_2, num_sample);

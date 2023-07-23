@@ -129,17 +129,6 @@ title('Summed Unresponsive Spikes')
 
 %% Multiple Regression - ALL TIMES
 
-%for responsive
-Predicted = imultipleregress(spike_counts_resp_downsample);
-
-% R-squared calculation
-RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
-RSS = mean(RSS, 1);
-TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
-TSS = mean(TSS, 1);
-
-resp_R_squared = 1 - (RSS./TSS);
-
 %for unresponsive
 Predicted_non = imultipleregress(spike_counts_nonresp_downsample);
 
@@ -160,6 +149,22 @@ subplot(1,2,2)
 histogram(unr_R_squared);
 xlabel('Non-responsive R²')
 linkaxes
+
+%for responsive
+Predicted = imultipleregress(spike_counts_resp_downsample);
+
+% R-squared calculation
+RSS = (spike_counts_resp_downsample - Predicted) .^ 2;
+RSS = mean(RSS, 1);
+TSS = (spike_counts_resp_downsample - mean(spike_counts_resp_downsample, 1)) .^ 2;
+TSS = mean(TSS, 1);
+
+resp_R_squared = 1 - (RSS./TSS);
+
+%% Perform Multiple Regression on varying number of neurons 
+%this takes forever to run
+Predicted = iVarymultipleregress(spike_counts_downsample);
+
 
 %% Fano Factors 
 
@@ -313,7 +318,8 @@ linkaxes
 
 
 %% Multiple Regression Behavior from Neurons
-
+selectedBehavior = trials.responseLatency; %response time per trial; use multiple neurons to predict 
+iregressbehavior(allSpikes_downsample,selectedBehavior)
 
 
 %% Scaling up - apply to multiple brain areas 

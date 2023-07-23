@@ -103,6 +103,10 @@ R_squared = 1 - (RSS./TSS);
 figure; histogram(R_squared);
 xlabel('R²');
 
+%% Perform Multiple Regression on varying number of neurons 
+%this takes forever to run
+Predicted = iVarymultipleregress(spike_counts_downsample,num_sample);
+
 
 
 %% Fano Factors 

@@ -27,8 +27,6 @@ movshonize(26,1)
 set(gca,'XScale','log')
 set(gca,'YScale','log')
 
-makeWhite
-
 %Now make a histogram of the fano factors in this region
 %Not really that meaningful, as what matters is the proportion above and
 %below 1

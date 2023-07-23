@@ -45,17 +45,12 @@ region_neurons = find(neurons.region == region_index);
 
 %% get spike data 
 
-[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); %neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
+% neurons x times (in 100 ms bins, 5 pre, 6 post trial onset) x num trial
+[spike_counts, allSpikes, allSpikesperTrial] = get_spike_counts(trials, S, region_neurons); 
 
-
-%downsample everything
-% spike_counts_downsample = spike_counts(:, unit_selected);
-% allSpikes_downsample = allSpikes(unit_selected,:);
-% allSpikesperTrial_downsample = allSpikesperTrial(unit_selected,:,:);
-
-
-%% Plot neuron by neuron 
-
+%% PSTH gui plotting
+spike_PSTH = get_spike_PSTH(trials, S, region_neurons);
+PSTH_GUI(spike_PSTH, trials);
 
 
 %% Pull Out Responsive Cells and Downsample
@@ -127,7 +122,7 @@ ylabel('Neuron')
 title('Summed Unresponsive Spikes')
 
 
-%% Multiple regression
+%% Multiple Regression - ALL TIMES
 
 %for unresponsive
 Predicted_non = imultipleregress(spike_counts_nonresp_downsample);
@@ -158,6 +153,7 @@ xlabel('Responsive R²')
 subplot(1,2,2)
 histogram(unr_R_squared);
 xlabel('Non-responsive R²')
+linkaxes
 
 %% Perform Multiple Regression on varying number of neurons 
 %this takes forever to run
@@ -212,6 +208,118 @@ xlabel('Fano Factor')
 subtitle('Unreponsive Neurons')
 
 
+
+
+%% Multiple Regression Part DEUX - Pre and Post Stimulus
+
+%get the stimulus times in the same format as spike_counts
+stim_counts = get_trial_counts(trials);
+
+%concatenate pre times and post times
+
+concatResponsivePre = []; concatResponsivePost = [];
+concatUnresponsivePre = []; concatUnresponsivePost = [];
+for stimIdx = 1:length(stim_counts)
+    curStimCount = stim_counts(stimIdx);
+    if curStimCount == 1
+        %get time window of stim
+        % curPreTimesResp =  spike_counts_resp_downsample((stimIdx-5):(stimIdx+4));
+        
+        curPreTimesResp = spike_counts_resp_downsample(((stimIdx-5):stimIdx-1),:);
+        curPostTimesResp = spike_counts_resp_downsample((stimIdx:(stimIdx+4)),:);
+            
+            concatResponsivePre = [concatResponsivePre; curPreTimesResp];
+            concatResponsivePost = [concatResponsivePost; curPostTimesResp];
+
+        curPreTimesNonResp = spike_counts_resp_downsample(((stimIdx-5):stimIdx-1),:);
+        curPostTimesNonResp = spike_counts_resp_downsample((stimIdx:(stimIdx+4)),:);
+                
+            concatUnresponsivePre = [concatUnresponsivePre; curPreTimesNonResp];
+            concatUnresponsivePost = [concatUnresponsivePost; curPostTimesNonResp];
+
+    end 
+end 
+
+all_concats = zeros(4,size(concatUnresponsivePre,1),size(concatUnresponsivePre,2));
+all_concats(1,:,:) = concatResponsivePre;
+all_concats(2,:,:) = concatResponsivePost;
+all_concats(3,:,:) = concatUnresponsivePre;
+all_concats(4,:,:) = concatUnresponsivePost;
+all_concat_names = {'Resp_Pre','Resp_Post','Unresp_Pre','Unresp_Post'};
+
+numTrials = length(trials.visStimTime);
+
+for feedMeSeymour = 1:4
+
+    curConcats = squeeze(all_concats(feedMeSeymour,:,:));
+    curConcatName = char(all_concat_names(feedMeSeymour)); 
+
+
+    %for responsive
+    Predicted = imultipleregress(curConcats);
+    
+    % R-squared calculation
+    RSS = (curConcats - Predicted) .^ 2;
+    RSS = mean(RSS, 1);
+    TSS = (curConcats - mean(curConcats, 1)) .^ 2;
+    TSS = mean(TSS, 1);
+    
+    concat_R_squared = 1 - (RSS./TSS);
+    
+    figure(200)
+    subplot(1,4,feedMeSeymour)
+    histogram(concat_R_squared);
+    xline(0,'r')
+    xlabel([curConcatName ' R²'])
+    title(curConcatName)
+
+    %fano factors
+    %reshape shit so that the fanny factors work
+    concatFannyShaped = [];
+    for fannyShape = 1:num_sample
+        curNeuronConcatMtx = curConcats(:, fannyShape).';
+        curNeuronConcatMtx = reshape(curNeuronConcatMtx,[5,numTrials]);
+        concatFannyShaped(fannyShape,:,:) = curNeuronConcatMtx; 
+    end 
+
+    concat_fanos = ifanofactor (concatFannyShaped);
+
+    figure(201); 
+    subplot(1,4,feedMeSeymour)
+    boxplot([concat_fanos, concat_R_squared'])
+    xticklabels({[curConcatName ' FFs'], [curConcatName ' r^2']})
+
+    % correlation value
+    concat_cor = corr(concat_fanos,concat_R_squared');
+    
+    % correlation figure 
+    figure(202); 
+    subplot(1,4,feedMeSeymour)
+    title('Relationship between Fano Factor and R^2')
+    
+    scatter(concat_fanos,concat_R_squared)
+    legend(['r = ' num2str(concat_cor)]);
+    ylabel('R squared')
+    xlabel('Fano Factor')
+    title([curConcatName ' Neurons'])
+
+    saveResults(feedMeSeymour).name = curConcatName;
+    saveResults(feedMeSeymour).Rsquared = concat_R_squared;
+    saveResults(feedMeSeymour).Predicted = Predicted; 
+    saveResults(feedMeSeymour).fanoFactors = concat_fanos; 
+    
+
+end 
+
+figure(200)
+linkaxes
+figure(201)
+linkaxes
+figure(202)
+linkaxes
+
+
+
 %% Multiple Regression Behavior from Neurons
 selectedBehavior = trials.responseLatency; %response time per trial; use multiple neurons to predict 
 RespSpikesPerTrial = squeeze(mean(selected_Responsive,2));
@@ -230,3 +338,16 @@ xlabel('Fano Factor')
 subtitle('Reponsive Neurons')
 
 %% Scaling up - apply to multiple brain areas 
+region1 = 'VISp';
+region2 = 'MOs';
+region_index = find(strcmp(regions.name, region1));
+region_neurons_1 = find(neurons.region == region_index);
+region_index = find(strcmp(regions.name, region2));
+region_neurons_2 = find(neurons.region == region_index);
+
+
+[spike_counts_1, ~, ~] = get_spike_counts(trials, S, region_neurons_1); 
+[spike_counts_2, ~, ~] = get_spike_counts(trials, S, region_neurons_2);
+
+
+[Predicted1, Predicted2] = TwoRegionRegress(spike_counts_1,spike_counts_2, num_sample);
